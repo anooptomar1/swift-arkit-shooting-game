@@ -1,18 +1,30 @@
-//
-//  Scene.swift
-//  arkit-shooting-game
-//
-//  Created by Ru Chern Chong on 10/10/17.
-//  Copyright © 2017 6DoF. All rights reserved.
-//
-
 import SpriteKit
 import ARKit
+import GameplayKit
 
 class Scene: SKScene {
     
+    let remainingLabel = SKLabelNode()
+    var timer : Timer?
+    
+    var targetsCreated = 0
+    var targetCount = 0 {
+        didSet {
+            remainingLabel.text = "Remaining: \(targetCount)"
+        }
+    }
+    
     override func didMove(to view: SKView) {
-        // Setup your scene here
+        remainingLabel.fontSize = 16
+        remainingLabel.fontName = "AmericanTypewriter"
+        remainingLabel.color = .white
+        remainingLabel.position = CGPoint(x: 0, y: view.frame.midY - 50)
+        addChild(remainingLabel)
+        targetCount = 0
+        
+        timer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) {
+            timer in self.createTarget()
+        }
     }
     
     override func update(_ currentTime: TimeInterval) {
@@ -20,21 +32,34 @@ class Scene: SKScene {
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        guard let sceneView = self.view as? ARSKView else {
+        
+    }
+    
+    func createTarget() {
+        if targetsCreated == 20 {
+            timer?.invalidate()
+            timer = nil
             return
         }
         
-        // Create anchor using the camera's current position
-        if let currentFrame = sceneView.session.currentFrame {
-            
-            // Create a transform with a translation of 0.2 meters in front of the camera
-            var translation = matrix_identity_float4x4
-            translation.columns.3.z = -0.2
-            let transform = simd_mul(currentFrame.camera.transform, translation)
-            
-            // Add a new anchor to the session
-            let anchor = ARAnchor(transform: transform)
-            sceneView.session.add(anchor: anchor)
-        }
+        targetsCreated += 1
+        targetCount += 1
+        
+        guard let sceneView = self.view as? ARSKView else { return }
+        
+        let random = GKRandomSource.sharedRandom()
+        
+        let xRotation = simd_float4x4(SCNMatrix4MakeRotation(Float.pi / 2 * random.nextUniform(), 1, 0, 0))
+        let yRotation = simd_float4x4(SCNMatrix4MakeRotation(Float.pi / 2 * random.nextUniform(), 0, 1, 0))
+        
+        let rotation = simd_mul(xRotation, yRotation)
+        
+        var translation = matrix_identity_float4x4
+        translation.columns.3.z = -1.5
+        
+        let transform = simd_mul(rotation, translation)
+        
+        let anchor = ARAnchor(transform: transform)
+        sceneView.session.add(anchor: anchor)
     }
 }
