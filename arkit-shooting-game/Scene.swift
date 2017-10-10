@@ -96,7 +96,7 @@ class Scene: SKScene {
         timeLabel.fontSize = 36
         timeLabel.fontName = "AmericanTypewriter"
         timeLabel.color = .white
-        timeLabel.position = CGPoint(x: 0, y: view!.frame.midY + 50)
+        timeLabel.position = CGPoint(x: 0, y: -view!.frame.midY + 50)
         addChild(timeLabel)
     }
 }
