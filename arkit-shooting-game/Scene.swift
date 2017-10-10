@@ -14,6 +14,8 @@ class Scene: SKScene {
         }
     }
     
+    let startTime = Date()
+    
     override func didMove(to view: SKView) {
         remainingLabel.fontSize = 16
         remainingLabel.fontName = "AmericanTypewriter"
@@ -32,7 +34,26 @@ class Scene: SKScene {
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        guard let touch = touches.first else { return }
         
+        let location = touch.location(in: self)
+        
+        let hit = nodes(at: location)
+        
+        if let sprite = hit.first {
+            let scaleOut = SKAction.scale(to: 2, duration: 0.2)
+            let fadeOut = SKAction.fadeOut(withDuration: 0.2)
+            let group = SKAction.group([scaleOut, fadeOut])
+            let sequence = SKAction.sequence([group, SKAction.removeFromParent()])
+            
+            sprite.run(sequence)
+            
+            targetCount -= 1
+            
+            if (targetsCreated == 20 && targetCount == 0) {
+                self.gameOver()
+            }
+        }
     }
     
     func createTarget() {
@@ -61,5 +82,21 @@ class Scene: SKScene {
         
         let anchor = ARAnchor(transform: transform)
         sceneView.session.add(anchor: anchor)
+    }
+    
+    func gameOver() {
+        remainingLabel.removeFromParent()
+        
+        let gameOver = SKSpriteNode(imageNamed: "gameOver")
+        addChild(gameOver)
+        
+        let timeTaken = Date().timeIntervalSince(startTime)
+        
+        let timeLabel = SKLabelNode(text: "Time taken: \(Int(timeTaken)) seconds")
+        timeLabel.fontSize = 36
+        timeLabel.fontName = "AmericanTypewriter"
+        timeLabel.color = .white
+        timeLabel.position = CGPoint(x: 0, y: view!.frame.midY + 50)
+        addChild(timeLabel)
     }
 }
